@@ -50,17 +50,50 @@ function pprint.setup(option)
     pprint.defaults = make_option(option)
 end
 
--- print aribitrary lua object
+-- format lua object into a string
 function pprint.pformat(obj, option)
     option = make_option(option)
     local buf = {}
+    local indent = ''
+    local function _p(s, ...)
+        table.insert(buf, indent..s:format(...))
+    end
 
+    local function _n()
+        table.insert(buf, '\n')
+    end
+
+    local formatter = {}
+    function tostring_formatter(v)
+        _p(tostring(v))
+    end
+
+    for _, t in ipairs({'nil', 'boolean', 'number'}) do
+        formatter[t] = tostring_formatter
+    end
+
+    local f = formatter[type(t)]
+    f = f or formatter.table
+
+    f(obj)
+
+    return table.concat(buf, '')
 end
 
 -- pprint all the arguments
 function pprint.pprint( ... )
-
+    -- explicitly use #args to get the correct length
+    -- ipairs stops halfway when the table contains nil
+    local args = {...}
+    for ix = 1,#args do
+        print(pprint.pformat(args[ix]))
+    end
 end
 
+setmetatable(pprint, {
+    __call = function (_, ...)
+        pprint.pprint(...)
+    end
+})
 
 return pprint
