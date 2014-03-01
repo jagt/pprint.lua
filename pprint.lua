@@ -18,7 +18,7 @@ pprint.defaults = {
     show_metatable = false,
     show_all = false, -- override other show settings and show everything
     -- format settings
-    indent_size = 4,
+    indent_size = 2,
     wrap_string = true, -- wrap string when it's longer than level_width
     wrap_array = false, -- wrap every array elements
     level_width = 80, -- max width per indent level
@@ -71,10 +71,9 @@ function pprint.pformat(obj, option)
         status.len = 0
     end
 
-    local function _p(s, ...)
-        local s = s:format(...)
+    local function _p(s, nowrap)
         status.len = status.len + #s
-        if status.len > option.level_width then
+        if not nowrap and status.len > option.level_width then
             _n()
             table.insert(buf, s)
             status.len = #s
@@ -111,9 +110,10 @@ function pprint.pformat(obj, option)
     local function table_formater(t)
         local tlen = #t
         _p('{')
-        _indent(1)
+        _indent(option.indent_size)
+         _p(string.rep(' ', option.indent_size - 1))
         for ix = 1,tlen do
-            _p('%s, ', format(t[ix]))
+            _p(format(t[ix])..', ')
             if option.wrap_array then
                 _n()
             end
@@ -122,15 +122,17 @@ function pprint.pformat(obj, option)
         for k, v in pairs(t) do
             local numkey = tonumber(k)
             if numkey ~= k or numkey > tlen then
-                _p(format(k))
-                _p(' = ')
-                _p(format(v))
-                _p(',')
+                _n()
+                _p(format(k), true)
+                _p(' = ', true)
+                _p(format(v), true)
+                _p(',', true)
             end
         end
 
+        _indent(-option.indent_size)
+        _n()
         _p('}')
-        _indent(-1)
 
         return ''
     end
