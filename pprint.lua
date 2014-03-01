@@ -74,21 +74,32 @@ function pprint.setup(option)
 end
 
 -- format lua object into a string
-function pprint.pformat(obj, option)
+function pprint.pformat(obj, option, printer)
     option = make_option(option)
     local buf = {}
+    local function default_printer(s)
+        table.insert(buf, s)
+    end
+    printer = printer or default_printer
+
+    local last = '' -- used for look back and remove trailing comma
     local status = {
         indent = '', -- current indent
         len = 0,     -- current line length
     }
+
+    local wrapped_printer = function(s)
+        printer(last)
+        last = s
+    end
 
     local function _indent(d)
         status.indent = string.rep(' ', d + #(status.indent))
     end
 
     local function _n(d)
-        table.insert(buf, '\n')
-        table.insert(buf, status.indent)
+        wrapped_printer('\n')
+        wrapped_printer(status.indent)
         if d then
             _indent(d)
         end
@@ -100,10 +111,10 @@ function pprint.pformat(obj, option)
         status.len = status.len + #s
         if not nowrap and status.len > option.level_width then
             _n()
-            table.insert(buf, s)
+            wrapped_printer(s)
             status.len = #s
         else
-            table.insert(buf, s)
+            wrapped_printer(s)
         end
     end
 
@@ -178,8 +189,8 @@ function pprint.pformat(obj, option)
         end
 
         _indent(-option.indent_size)
-        -- peek forward to remove trailing comma (FIXME better not look back)
-        buf[#buf] = string.gsub(buf[#buf], ',%s*$', ' ')
+        -- peek last to remove trailing comma
+        last = string.gsub(last, ',%s*$', ' ')
         if wrapped then
             _n()
         end
@@ -201,6 +212,7 @@ function pprint.pformat(obj, option)
     formatter['table'] = option.show_table and table_formatter or nop_formatter
 
     _p(format(obj))
+    printer(last) -- close the buffered one
 
     return table.concat(buf)
 end
@@ -211,10 +223,9 @@ function pprint.pprint( ... )
     -- ipairs stops halfway when the table contains nil
     local args = {...}
     for ix = 1,#args do
-        local s = pprint.pformat(args[ix])
-        if #s > 0 then
-            print(s)
-        end
+        -- FIXME empty newline on non-shown elements
+        pprint.pformat(args[ix], nil, io.write)
+        print()
     end
 end
 
