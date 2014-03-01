@@ -50,12 +50,37 @@ local function is_plain_key(key)
     return type(key) == 'string' and key:match('^[%a_][%a%d_]*$')
 end
 
+-- makes 'foo2' < 'foo100000'. sub makes substring anyway, no need to use index based method
+local function str_natural_cmp(lhs, rhs)
+    while #lhs > 0 and #rhs > 0 do
+        local lmid, lend = lhs:find('[%d.]+')
+        local rmid, rend = rhs:find('[%d.]+')
+        if not (lmid and rmid) then return lhs < rhs end
+
+        local lsub = lhs:sub(1, lmid-1)
+        local rsub = rhs:sub(1, rmid-1)
+        if lsub ~= rsub then
+            return lsub < rsub
+        end
+
+        local lnum = tonumber(lhs:sub(lmid, lend))
+        local rnum = tonumber(rhs:sub(rmid, rend))
+        if lnum ~= rnum then
+            return lnum < rnum
+        end
+
+        lhs = lhs:sub(lend+1)
+        rhs = rhs:sub(rend+1)
+    end
+    return lhs < rhs
+end
+
 local function cmp(lhs, rhs)
     local tleft = type(lhs)
     local tright = type(rhs)
     if tleft == 'number' and tright == 'number' then return lhs < rhs end
-    if tleft == 'string' and tright == 'string' then return lhs < rhs end
-    if tleft == tright then return tostring(lhs) < tostring(rhs) end
+    if tleft == 'string' and tright == 'string' then return str_natural_cmp(lhs, rhs) end
+    if tleft == tright then return str_natural_cmp(tostring(lhs), tostring(rhs)) end
 
     -- allow custom types
     local oleft = TYPES[tleft] or 9
@@ -184,7 +209,7 @@ function pprint.pformat(obj, option, printer)
                 wrapped = _n()
             end
         end
-        
+
         local function is_hash_key(k)
             local numkey = tonumber(k)
             if numkey ~= k or numkey > tlen then
