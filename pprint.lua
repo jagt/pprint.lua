@@ -18,15 +18,17 @@ pprint.defaults = {
     show_metatable = false,
     show_all = false, -- override other show settings and show everything
     -- format settings
-    indent = 4,
+    indent_size = 4,
     wrap_string = true, -- wrap string when it's longer than level_width
-    level_width = 120, -- max width per indent level
+    wrap_array = false, -- wrap every array elements
+    level_width = 80, -- max width per indent level
+    sort_keys = true, -- sort table keys
 }
 
 -- setup option with default
 local function make_option(option)
     if option == nil then
-        return pprint.defaults
+        option = {}
     end
     for k, v in pairs(pprint.defaults) do
         if option[k] == nil then
@@ -51,31 +53,89 @@ end
 function pprint.pformat(obj, option)
     option = make_option(option)
     local buf = {}
-    local indent = ''
-    local function _p(s, ...)
-        table.insert(buf, indent..s:format(...))
+    local status = {
+        indent = '', -- current indent
+        len = 0,     -- current line length
+    }
+
+    local function _indent(d)
+        status.indent = string.rep(' ', d + #(status.indent))
     end
 
-    local function _n()
+    local function _n(d)
         table.insert(buf, '\n')
+        table.insert(buf, status.indent)
+        if d then
+            _indent(d)
+        end
+        status.len = 0
     end
 
-    local formatter = {}
-    function tostring_formatter(v)
-        _p(tostring(v))
-    end
-
-    function nop_formatter(v)
-    end
-
-    function make_fixed_formatter(s)
-        return function (v)
-            _p(s)
+    local function _p(s, ...)
+        local s = s:format(...)
+        status.len = status.len + #s
+        if status.len > option.level_width then
+            _n()
+            table.insert(buf, s)
+            status.len = #s
+        else
+            table.insert(buf, s)
         end
     end
 
-    -- make_fixed_formatter('[[yeah]]')('whatever')
+    local formatter = {}
+    local function format(v)
+        local f = formatter[type(v)]
+        f = f or formatter.table -- allow patched type()
+        return f(v)
+    end
 
+    local function tostring_formatter(v)
+        return tostring(v)
+    end
+
+    local function nop_formatter(v)
+        return ''
+    end
+
+    local function make_fixed_formatter(s)
+        return function (v)
+            return s
+        end
+    end
+
+    local function string_formatter(s)
+        return s
+    end
+
+    local function table_formater(t)
+        local tlen = #t
+        _p('{')
+        _indent(1)
+        for ix = 1,tlen do
+            _p('%s, ', format(t[ix]))
+            if option.wrap_array then
+                _n()
+            end
+        end
+        -- FIXME sort keys by providing a custom function
+        for k, v in pairs(t) do
+            local numkey = tonumber(k)
+            if numkey ~= k or numkey > tlen then
+                _p(format(k))
+                _p(' = ')
+                _p(format(v))
+                _p(',')
+            end
+        end
+
+        _p('}')
+        _indent(-1)
+
+        return ''
+    end
+
+    -- set formatters
     for _, t in ipairs({'nil', 'boolean', 'number'}) do
         formatter[t] = option['show_'..t] and tostring_formatter or nop_formatter
     end
@@ -84,12 +144,12 @@ function pprint.pformat(obj, option)
         formatter[t] = option['show_'..t] and make_fixed_formatter('[['..t..']]') or nop_formatter
     end
 
-    local f = formatter[type(obj)]
-    f = f or formatter.table
+    formatter['string'] = option.show_string and string_formatter or nop_formatter
+    formatter['table'] = option.show_table and table_formater or nop_formatter
 
-    f(obj)
+    _p(format(obj))
 
-    return table.concat(buf, '')
+    return table.concat(buf)
 end
 
 -- pprint all the arguments
