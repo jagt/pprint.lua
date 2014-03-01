@@ -107,7 +107,7 @@ function pprint.pformat(obj, option)
         return s
     end
 
-    local function table_formater(t)
+    local function table_formatter(t)
         local tlen = #t
         _p('{')
         _indent(option.indent_size)
@@ -131,6 +131,8 @@ function pprint.pformat(obj, option)
         end
 
         _indent(-option.indent_size)
+        -- peek forward to remove trailing comma (FIXME better not look back)
+        buf[#buf] = string.gsub(buf[#buf], ',%s*$', '')
         _n()
         _p('}')
 
@@ -147,7 +149,7 @@ function pprint.pformat(obj, option)
     end
 
     formatter['string'] = option.show_string and string_formatter or nop_formatter
-    formatter['table'] = option.show_table and table_formater or nop_formatter
+    formatter['table'] = option.show_table and table_formatter or nop_formatter
 
     _p(format(obj))
 
