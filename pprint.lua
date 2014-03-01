@@ -1,9 +1,5 @@
 local pprint = {}
 
-local TYPES = {
-    'nil', 'boolean', 'number', 'string', 'table', 'function', 'thread', 'userdata'
-}
-
 pprint.defaults = {
     -- type display trigger
     show_nil = true,
@@ -24,6 +20,34 @@ pprint.defaults = {
     level_width = 80, -- max width per indent level
     sort_keys = true, -- sort table keys
 }
+
+local TYPES = {
+    'nil', 'boolean', 'number', 'string', 'table', 'function', 'thread', 'userdata'
+}
+
+-- seems this is the only way to escape these, as lua don't know how to char '\a' to 'a'
+local ESCAPE_MAP = {
+    ['\a'] = '\\a', ['\b'] = '\\b', ['\f'] = '\\f', ['\n'] = '\\n', ['\r'] = '\\r',
+    ['\t'] = '\\t', ['\v'] = '\\v', ['\\'] = '\\\\',
+}
+
+-- generic utilities
+local function escape(s)
+    s = s:gsub('([%c\\])', ESCAPE_MAP)
+    local dq = s:find('"') 
+    local sq = s:find("'")
+    if dq and sq then
+        return s:gsub('"', '\\"'), '"'
+    elseif sq then
+        return s, '"'
+    else
+        return s, "'"
+    end
+end
+
+local function is_plain_key(key)
+    return type(key) == 'string' and key:match('^[%a_][%a%d_]*$')
+end
 
 -- setup option with default
 local function make_option(option)
@@ -69,6 +93,7 @@ function pprint.pformat(obj, option)
             _indent(d)
         end
         status.len = 0
+        return true -- used to close bracket correctly
     end
 
     local function _p(s, nowrap)
@@ -104,26 +129,48 @@ function pprint.pformat(obj, option)
     end
 
     local function string_formatter(s)
-        return s
+        local s, quote = escape(s)
+        if #s + status.len > option.level_width then
+            local s = '[['..s..']]'
+            if not option.wrap_string then
+                return s
+            end
+            while #s + status.len > option.level_width do
+                local seg = option.level_width - status.len
+                _p(string.sub(s, 1, seg))
+                _n()
+                s = string.sub(s, seg+1)
+            end
+            return s -- return remaining part
+        else
+            return quote..s..quote
+        end
     end
 
     local function table_formatter(t)
         local tlen = #t
+        local wrapped = false
         _p('{')
         _indent(option.indent_size)
          _p(string.rep(' ', option.indent_size - 1))
         for ix = 1,tlen do
             _p(format(t[ix])..', ')
             if option.wrap_array then
-                _n()
+                wrapped = _n()
             end
         end
         -- FIXME sort keys by providing a custom function
         for k, v in pairs(t) do
             local numkey = tonumber(k)
             if numkey ~= k or numkey > tlen then
-                _n()
-                _p(format(k), true)
+                wrapped = _n()
+                if is_plain_key(k) then
+                    _p(k, true)
+                else
+                    _p('[')
+                    _p(format(k), true)
+                    _p(']')
+                end
                 _p(' = ', true)
                 _p(format(v), true)
                 _p(',', true)
@@ -132,8 +179,10 @@ function pprint.pformat(obj, option)
 
         _indent(-option.indent_size)
         -- peek forward to remove trailing comma (FIXME better not look back)
-        buf[#buf] = string.gsub(buf[#buf], ',%s*$', '')
-        _n()
+        buf[#buf] = string.gsub(buf[#buf], ',%s*$', ' ')
+        if wrapped then
+            _n()
+        end
         _p('}')
 
         return ''
@@ -145,7 +194,7 @@ function pprint.pformat(obj, option)
     end
 
     for _, t in ipairs({'function', 'thread', 'userdata'}) do
-        formatter[t] = option['show_'..t] and make_fixed_formatter('[['..t..']]') or nop_formatter
+        formatter[t] = option['show_'..t] and make_fixed_formatter('[[ '..t..' ]]') or nop_formatter
     end
 
     formatter['string'] = option.show_string and string_formatter or nop_formatter
@@ -176,3 +225,4 @@ setmetatable(pprint, {
 })
 
 return pprint
+
