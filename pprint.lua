@@ -1,8 +1,5 @@
 local pprint = {}
 
--- TODO
--- some projects can override type() to return different types, should find a way to handle this
-
 local TYPES = {
     'nil', 'boolean', 'number', 'string', 'table', 'function', 'thread', 'userdata'
 }
@@ -101,8 +98,10 @@ function pprint.pprint( ... )
     -- ipairs stops halfway when the table contains nil
     local args = {...}
     for ix = 1,#args do
-        -- FIXME skip ''s
-        print(pprint.pformat(args[ix]))
+        local s = pprint.pformat(args[ix])
+        if #s > 0 then
+            print(s)
+        end
     end
 end
 
