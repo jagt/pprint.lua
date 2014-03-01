@@ -22,7 +22,8 @@ pprint.defaults = {
 }
 
 local TYPES = {
-    'nil', 'boolean', 'number', 'string', 'table', 'function', 'thread', 'userdata'
+    ['nil'] = 1, ['boolean'] = 2, ['number'] = 3, ['string'] = 4, 
+    ['table'] = 5, ['function'] = 6, ['thread'] = 7, ['userdata'] = 8
 }
 
 -- seems this is the only way to escape these, as lua don't know how to char '\a' to 'a'
@@ -49,6 +50,19 @@ local function is_plain_key(key)
     return type(key) == 'string' and key:match('^[%a_][%a%d_]*$')
 end
 
+local function cmp(lhs, rhs)
+    local tleft = type(lhs)
+    local tright = type(rhs)
+    if tleft == 'number' and tright == 'number' then return lhs < rhs end
+    if tleft == 'string' and tright == 'string' then return lhs < rhs end
+    if tleft == tright then return tostring(lhs) < tostring(rhs) end
+
+    -- allow custom types
+    local oleft = TYPES[tleft] or 9
+    local oright = TYPES[tright] or 9
+    return oleft < oright
+end
+
 -- setup option with default
 local function make_option(option)
     if option == nil then
@@ -59,7 +73,7 @@ local function make_option(option)
             option[k] = v
         end
         if option.show_all then
-            for _, t in ipairs(TYPES) do
+            for t, _ in pairs(TYPES) do
                 option['show_'..t] = true
             end
             option.show_metatable = true
@@ -170,21 +184,44 @@ function pprint.pformat(obj, option, printer)
                 wrapped = _n()
             end
         end
-        -- FIXME sort keys by providing a custom function
-        for k, v in pairs(t) do
+        
+        local function is_hash_key(k)
             local numkey = tonumber(k)
             if numkey ~= k or numkey > tlen then
-                wrapped = _n()
-                if is_plain_key(k) then
-                    _p(k, true)
-                else
-                    _p('[')
-                    _p(format(k), true)
-                    _p(']')
+                return true
+            end
+        end
+
+        local function print_kv(k, v)
+            wrapped = _n()
+            if is_plain_key(k) then
+                _p(k, true)
+            else
+                _p('[')
+                _p(format(k), true)
+                _p(']')
+            end
+            _p(' = ', true)
+            _p(format(v), true)
+            _p(',', true)
+        end
+
+        if option.sort_keys then
+            local keys = {}
+            for k, _ in pairs(t) do
+                if is_hash_key(k) then
+                    table.insert(keys, k)
                 end
-                _p(' = ', true)
-                _p(format(v), true)
-                _p(',', true)
+            end
+            table.sort(keys, cmp)
+            for _, k in ipairs(keys) do
+                print_kv(k, t[k])
+            end
+        else
+            for k, v in pairs(t) do
+                if is_hash_key(k) then
+                    print_kv(k, v)
+                end
             end
         end
 
