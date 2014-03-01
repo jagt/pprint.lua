@@ -31,7 +31,7 @@ local function make_option(option)
     if option == nil then
         return pprint.defaults
     end
-    for k, v in pprint.defaults do
+    for k, v in pairs(pprint.defaults) do
         if option[k] == nil then
             option[k] = v
         end
@@ -68,11 +68,26 @@ function pprint.pformat(obj, option)
         _p(tostring(v))
     end
 
-    for _, t in ipairs({'nil', 'boolean', 'number'}) do
-        formatter[t] = tostring_formatter
+    function nop_formatter(v)
     end
 
-    local f = formatter[type(t)]
+    function make_fixed_formatter(s)
+        return function (v)
+            _p(s)
+        end
+    end
+
+    -- make_fixed_formatter('[[yeah]]')('whatever')
+
+    for _, t in ipairs({'nil', 'boolean', 'number'}) do
+        formatter[t] = option['show_'..t] and tostring_formatter or nop_formatter
+    end
+
+    for _, t in ipairs({'function', 'thread', 'userdata'}) do
+        formatter[t] = option['show_'..t] and make_fixed_formatter('[['..t..']]') or nop_formatter
+    end
+
+    local f = formatter[type(obj)]
     f = f or formatter.table
 
     f(obj)
@@ -86,6 +101,7 @@ function pprint.pprint( ... )
     -- ipairs stops halfway when the table contains nil
     local args = {...}
     for ix = 1,#args do
+        -- FIXME skip ''s
         print(pprint.pformat(args[ix]))
     end
 end
