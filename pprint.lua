@@ -181,19 +181,22 @@ function pprint.pformat(obj, option, printer)
 
     local function string_formatter(s, force_long_quote)
         local s, quote = escape(s)
-        -- wrap when (quote * 2 + #s + current len > level_width)
-        if option.wrap_string and 2 + #s + status.len > option.level_width then
-            local s = '[['..s..']]'
-            while #s + status.len > option.level_width do
-                local seg = option.level_width - status.len
-                _p(string.sub(s, 1, seg))
-                _n()
-                s = string.sub(s, seg+1)
+        local quote_len = force_long_quote and 4 or 2
+        if quote_len + #s + status.len > option.level_width then
+            -- only wrap string when is longer than level_width
+            if option.wrap_string and #s + quote_len > option.level_width then
+                s = '[['..s..']]'
+                while #s + status.len >= option.level_width do
+                    local seg = option.level_width - status.len
+                    _p(string.sub(s, 1, seg), true)
+                    _n()
+                    s = string.sub(s, seg+1)
+                end
+                return s -- return remaining part
             end
-            return s -- return remaining part
-        else
-            return force_long_quote and '[['..s..']]' or quote..s..quote
         end
+
+        return force_long_quote and '[['..s..']]' or quote..s..quote
     end
 
     local function table_formatter(t)
