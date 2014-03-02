@@ -11,14 +11,15 @@ pprint.defaults = {
     show_thread = false,
     show_userdata = false,
     -- additional display trigger
-    show_metatable = false,
-    show_all = false, -- override other show settings and show everything
+    show_metatable = false,    -- show metatable
+    show_all = false,          -- override other show settings and show everything
+    use_tostring = false,      -- use __tostring to print table if available
     -- format settings
     indent_size = 2,
-    wrap_string = true, -- wrap string when it's longer than level_width
-    wrap_array = false, -- wrap every array elements
-    level_width = 80, -- max width per indent level
-    sort_keys = true, -- sort table keys
+    wrap_string = true,        -- wrap string when it's longer than level_width
+    wrap_array = false,        -- wrap every array elements
+    level_width = 80,          -- max width per indent level
+    sort_keys = true,          -- sort table keys
 }
 
 local TYPES = {
@@ -178,13 +179,11 @@ function pprint.pformat(obj, option, printer)
         end
     end
 
-    local function string_formatter(s)
+    local function string_formatter(s, force_long_quote)
         local s, quote = escape(s)
-        if #s + status.len > option.level_width then
+        -- wrap when (quote * 2 + #s + current len > level_width)
+        if option.wrap_string and 2 + #s + status.len > option.level_width then
             local s = '[['..s..']]'
-            if not option.wrap_string then
-                return s
-            end
             while #s + status.len > option.level_width do
                 local seg = option.level_width - status.len
                 _p(string.sub(s, 1, seg))
@@ -193,20 +192,33 @@ function pprint.pformat(obj, option, printer)
             end
             return s -- return remaining part
         else
-            return quote..s..quote
+            return force_long_quote and '[['..s..']]' or quote..s..quote
         end
     end
 
     local function table_formatter(t)
+        if option.use_tostring then
+            local mt = getmetatable(t)
+            if mt and mt.__tostring then
+                return string_formatter(tostring(t), true)
+            end
+        end
+
         local tlen = #t
         local wrapped = false
         _p('{')
         _indent(option.indent_size)
          _p(string.rep(' ', option.indent_size - 1))
+        if option.wrap_array and tlen > 0 then
+            wrapped = _n()
+        end
         for ix = 1,tlen do
-            _p(format(t[ix])..', ')
-            if option.wrap_array then
-                wrapped = _n()
+            local v = t[ix]
+            if formatter[type(v)] ~= nop_formatter then
+                _p(format(v)..', ')
+                if option.wrap_array then
+                    wrapped = _n()
+                end
             end
         end
 
@@ -218,6 +230,10 @@ function pprint.pformat(obj, option, printer)
         end
 
         local function print_kv(k, v)
+            -- can't use option.show_x as obj may contain custom type
+            if formatter[type(v)] == nop_formatter then
+                return
+            end
             wrapped = _n()
             if is_plain_key(k) then
                 _p(k, true)
@@ -247,6 +263,13 @@ function pprint.pformat(obj, option, printer)
                 if is_hash_key(k) then
                     print_kv(k, v)
                 end
+            end
+        end
+
+        if option.show_metatable then
+            local mt = getmetatable(t)
+            if mt then
+                print_kv('__metatable', mt)
             end
         end
 
