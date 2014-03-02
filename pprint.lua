@@ -217,7 +217,7 @@ function pprint.pformat(obj, option, printer)
         local wrapped = false
         _p('{')
         _indent(option.indent_size)
-         _p(string.rep(' ', option.indent_size - 1))
+        _p(string.rep(' ', option.indent_size - 1))
         for ix = 1,tlen do
             local v = t[ix]
             if formatter[type(v)] == nop_formatter or 
@@ -284,6 +284,8 @@ function pprint.pformat(obj, option, printer)
         end
 
         _indent(-option.indent_size)
+        -- make { } into {}
+        last = string.gsub(last, '^ +$', '')
         -- peek last to remove trailing comma
         last = string.gsub(last, ',%s*$', ' ')
         if wrapped then
