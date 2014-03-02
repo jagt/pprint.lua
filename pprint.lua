@@ -12,17 +12,18 @@ pprint.defaults = {
     show_thread = false,
     show_userdata = false,
     -- additional display trigger
-    show_metatable = false,    -- show metatable
-    show_all = false,          -- override other show settings and show everything
-    use_tostring = false,      -- use __tostring to print table if available
-    filter_function = nil,     -- called like callback(value[,key]), return truty value to hide
-    cache_duplicates = 'global', --
+    show_metatable = false,     -- show metatable
+    show_all = false,           -- override other show settings and show everything
+    use_tostring = false,       -- use __tostring to print table if available
+    filter_function = nil,      -- called like callback(value[,key]), return truty value to hide
+    object_cache = 'local',     -- cache blob and table to give it a id, 'local' cache per print, 'global' cache
+                                -- per process, falsy value to disable (might cause infinite loop)
     -- format settings
-    indent_size = 2,           -- indent for each nested table level
-    wrap_string = true,        -- wrap string when it's longer than level_width
-    wrap_array = false,        -- wrap every array elements
-    level_width = 80,          -- max width per indent level
-    sort_keys = true,          -- sort table keys
+    indent_size = 2,            -- indent for each nested table level
+    wrap_string = true,         -- wrap string when it's longer than level_width
+    wrap_array = false,         -- wrap every array elements
+    level_width = 80,           -- max width per indent level
+    sort_keys = true,           -- sort table keys
 }
 
 local TYPES = {
@@ -52,6 +53,52 @@ end
 
 local function is_plain_key(key)
     return type(key) == 'string' and key:match('^[%a_][%a%d_]*$')
+end
+
+local CACHE_TYPES = {
+    ['table'] = true, ['function'] = true, ['thread'] = true, ['userdata'] = true
+}
+
+-- cache would be populated to be like:
+-- {
+--     function = { `fun1` = 1, _cnt = 1 },
+--     table = { `table1` = 1, `table2` = 2, _cnt = 2 },
+--     visited_tables = { `table1` = true, `table2` = true },
+-- }
+-- use weakrefs to avoid accidentall adding refcount
+local function cache_apperance(obj, cache)
+    if not cache.visited_tables then
+        cache.visited_tables = setmetatable({}, {__mode = 'k'})
+    end
+    local t = type(obj)
+    if CACHE_TYPES[t] or TYPES[t] == nil then
+        if not cache[t] then
+            cache[t] = setmetatable({}, {__mode = 'k'})
+            cache[t]._cnt = 0
+        end
+        cache[t]._cnt = cache[t]._cnt + 1
+        cache[t][obj] = cache[t]._cnt
+    end
+    if t == 'table' or TYPES[t] == nil then
+        if cache.visited_tables[obj] == false then
+            -- already printed, no need to mark this and its children anymore
+            return
+        elseif cache.visited_tables[obj] == nil then
+            cache.visited_tables[obj] = 1
+        else
+            -- visited already, increment and continue
+            cache.visited_tables[obj] = cache.visited_tables[obj] + 1
+            return
+        end
+        for k, v in pairs(obj) do
+            cache_apperance(k, cache)
+            cache_apperance(v, cache)
+        end
+        local mt = getmetatable(obj)
+        if mt then
+            cache_apperance(mt, cache)
+        end
+    end
 end
 
 -- makes 'foo2' < 'foo100000'. string.sub makes substring anyway, no need to use index based method
@@ -107,6 +154,11 @@ local function make_option(option)
             end
             option.show_metatable = true
         end
+    end
+    if option.object_cache == 'global' then
+        pprint._cache = pprint._cache or {}
+    elseif option.object_cache == 'local' then
+        pprint._cache = {}
     end
     return option
 end
@@ -180,9 +232,15 @@ function pprint.pformat(obj, option, printer)
         return ''
     end
 
-    local function make_fixed_formatter(s)
-        return function (v)
-            return s
+    local function make_fixed_formatter(t, has_cache)
+        if has_cache then
+            return function (v)
+                return string.format('[[%s %d]]', t, pprint._cache[t][v])
+            end
+        else
+            return function (v)
+                return '[['..t..']]'
+            end
         end
     end
 
@@ -214,11 +272,32 @@ function pprint.pformat(obj, option, printer)
             end
         end
 
+        local print_header_ix = nil
+        local ttype = type(t)
+        if option.object_cache then
+            local cache_state = pprint._cache.visited_tables[t]
+            local tix = pprint._cache[ttype][t]
+            if cache_state == false then
+                -- already printed, just print the the number
+                return string_formatter(string.format('%s %d', ttype, tix), true)
+            elseif cache_state > 1 then
+                -- appeared more than once, print table header with number
+                print_header_ix = tix
+                pprint._cache.visited_tables[t] = false
+            else
+                -- appeared exactly once, print like a normal table
+            end
+        end
+
         local tlen = #t
         local wrapped = false
         _p('{')
         _indent(option.indent_size)
         _p(string.rep(' ', option.indent_size - 1))
+        if print_header_ix then
+            _p(string.format('-- %s %d', ttype, print_header_ix))
+            _n()
+        end
         for ix = 1,tlen do
             local v = t[ix]
             if formatter[type(v)] == nop_formatter or 
@@ -250,7 +329,13 @@ function pprint.pformat(obj, option, printer)
                 _p(k, true)
             else
                 _p('[')
-                _p(format(k), true)
+                -- [[]] type string in key is illegal, needs to escape it to [
+                local k = format(k)
+                if string.match(k, '%[%[') then
+                    _p(string.sub(k, 3, #k-2), true)
+                else
+                    _p(k, true)
+                end
                 _p(']')
             end
             _p(' = ', true)
@@ -303,11 +388,16 @@ function pprint.pformat(obj, option, printer)
     end
 
     for _, t in ipairs({'function', 'thread', 'userdata'}) do
-        formatter[t] = option['show_'..t] and make_fixed_formatter('[[ '..t..' ]]') or nop_formatter
+        formatter[t] = option['show_'..t] and make_fixed_formatter(t, option.object_cache) or nop_formatter
     end
 
     formatter['string'] = option.show_string and string_formatter or nop_formatter
     formatter['table'] = option.show_table and table_formatter or nop_formatter
+
+    if option.object_cache then
+        -- needs to visit the table before start printing
+        cache_apperance(obj, pprint._cache)
+    end
 
     _p(format(obj))
     printer(last) -- close the buffered one
