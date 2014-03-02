@@ -1,4 +1,4 @@
-local pprint = {}
+local pprint = { VERSION = '0.0' }
 
 pprint.defaults = {
     -- type display trigger, hide not useful datatypes by default
@@ -20,9 +20,9 @@ pprint.defaults = {
                                 -- per process, falsy value to disable (might cause infinite loop)
     -- format settings
     indent_size = 2,            -- indent for each nested table level
+    level_width = 80,           -- max width per indent level
     wrap_string = true,         -- wrap string when it's longer than level_width
     wrap_array = false,         -- wrap every array elements
-    level_width = 80,           -- max width per indent level
     sort_keys = true,           -- sort table keys
 }
 
