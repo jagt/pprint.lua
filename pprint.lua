@@ -76,8 +76,10 @@ local function cache_apperance(obj, cache)
             cache[t] = setmetatable({}, {__mode = 'k'})
             cache[t]._cnt = 0
         end
-        cache[t]._cnt = cache[t]._cnt + 1
-        cache[t][obj] = cache[t]._cnt
+        if not cache[t][obj] then
+            cache[t]._cnt = cache[t]._cnt + 1
+            cache[t][obj] = cache[t]._cnt
+        end
     end
     if t == 'table' or TYPES[t] == nil then
         if cache.visited_tables[obj] == false then
