@@ -295,8 +295,7 @@ function pprint.pformat(obj, option, printer)
         _indent(option.indent_size)
         _p(string.rep(' ', option.indent_size - 1))
         if print_header_ix then
-            _p(string.format('-- %s %d', ttype, print_header_ix))
-            _n()
+            _p(string.format('--[[%s %d]] ', ttype, print_header_ix))
         end
         for ix = 1,tlen do
             local v = t[ix]
@@ -329,10 +328,10 @@ function pprint.pformat(obj, option, printer)
                 _p(k, true)
             else
                 _p('[')
-                -- [[]] type string in key is illegal, needs to escape it to [
+                -- [[]] type string in key is illegal, needs to add spaces inbetween
                 local k = format(k)
                 if string.match(k, '%[%[') then
-                    _p(string.sub(k, 3, #k-2), true)
+                    _p(' '..k..' ', true)
                 else
                     _p(k, true)
                 end
