@@ -1,7 +1,8 @@
 local pprint = {}
 
 pprint.defaults = {
-    -- type display trigger
+    -- type display trigger, hide not useful datatypes by default
+    -- custom types are treated as table
     show_nil = true,
     show_boolean = true,
     show_number = true,
@@ -15,7 +16,7 @@ pprint.defaults = {
     show_all = false,          -- override other show settings and show everything
     use_tostring = false,      -- use __tostring to print table if available
     -- format settings
-    indent_size = 2,
+    indent_size = 2,           -- indent for each nested table level
     wrap_string = true,        -- wrap string when it's longer than level_width
     wrap_array = false,        -- wrap every array elements
     level_width = 80,          -- max width per indent level
@@ -51,7 +52,7 @@ local function is_plain_key(key)
     return type(key) == 'string' and key:match('^[%a_][%a%d_]*$')
 end
 
--- makes 'foo2' < 'foo100000'. sub makes substring anyway, no need to use index based method
+-- makes 'foo2' < 'foo100000'. string.sub makes substring anyway, no need to use index based method
 local function str_natural_cmp(lhs, rhs)
     while #lhs > 0 and #rhs > 0 do
         local lmid, lend = lhs:find('[%d.]+')
