@@ -322,6 +322,7 @@ function pprint.pformat(obj, option, printer)
         local function print_kv(k, v)
             -- can't use option.show_x as obj may contain custom type
             if formatter[type(v)] == nop_formatter or
+               formatter[type(k)] == nop_formatter or 
                (option.filter_function and option.filter_function(v, k)) then
                 return
             end
