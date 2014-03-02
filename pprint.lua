@@ -16,6 +16,7 @@ pprint.defaults = {
     show_all = false,          -- override other show settings and show everything
     use_tostring = false,      -- use __tostring to print table if available
     filter_function = nil,     -- called like callback(value[,key]), return truty value to hide
+    cache_duplicates = 'global', --
     -- format settings
     indent_size = 2,           -- indent for each nested table level
     wrap_string = true,        -- wrap string when it's longer than level_width
@@ -316,14 +317,13 @@ end
 
 -- pprint all the arguments
 function pprint.pprint( ... )
-    -- explicitly use #args to get the correct length
-    -- ipairs stops halfway when the table contains nil
     local args = {...}
-    for ix = 1,#args do
-        -- FIXME empty newline on non-shown elements
-        pprint.pformat(args[ix], nil, io.write)
-        print()
+    if #args == 1 then
+        pprint.pformat(args[1], nil, io.write)
+    else
+        pprint.pformat(args, nil, io.write)
     end
+    print()
 end
 
 setmetatable(pprint, {
