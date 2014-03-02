@@ -15,6 +15,7 @@ pprint.defaults = {
     show_metatable = false,    -- show metatable
     show_all = false,          -- override other show settings and show everything
     use_tostring = false,      -- use __tostring to print table if available
+    filter_function = nil,     -- called like callback(value[,key]), return truty value to hide
     -- format settings
     indent_size = 2,           -- indent for each nested table level
     wrap_string = true,        -- wrap string when it's longer than level_width
@@ -163,7 +164,11 @@ function pprint.pformat(obj, option, printer)
     local function format(v)
         local f = formatter[type(v)]
         f = f or formatter.table -- allow patched type()
-        return f(v)
+        if option.filter_function and option.filter_function(v, nil) then
+            return ''
+        else
+            return f(v)
+        end
     end
 
     local function tostring_formatter(v)
@@ -213,16 +218,16 @@ function pprint.pformat(obj, option, printer)
         _p('{')
         _indent(option.indent_size)
          _p(string.rep(' ', option.indent_size - 1))
-        if option.wrap_array and tlen > 0 then
-            wrapped = _n()
-        end
         for ix = 1,tlen do
             local v = t[ix]
-            if formatter[type(v)] ~= nop_formatter then
-                _p(format(v)..', ')
+            if formatter[type(v)] == nop_formatter or 
+               (option.filter_function and option.filter_function(v, ix)) then
+               -- pass
+            else
                 if option.wrap_array then
                     wrapped = _n()
                 end
+                _p(format(v)..', ')
             end
         end
 
@@ -235,7 +240,8 @@ function pprint.pformat(obj, option, printer)
 
         local function print_kv(k, v)
             -- can't use option.show_x as obj may contain custom type
-            if formatter[type(v)] == nop_formatter then
+            if formatter[type(v)] == nop_formatter or
+               (option.filter_function and option.filter_function(v, k)) then
                 return
             end
             wrapped = _n()

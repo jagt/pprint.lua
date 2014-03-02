@@ -21,4 +21,13 @@ If you're on LuaRocks then get [`inspect.lua`][1] instead. It's been around long
 
 TODO
 
+## Bugs
+
+1. Combination of some settings would cause visual artifacts in the output.
+
+## License
+
+Public Domain
+
 [1]:https://github.com/kikito/inspect.lua "inspect.lua"
+
