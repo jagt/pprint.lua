@@ -298,10 +298,6 @@ function pprint.pformat(obj, option, printer)
             local tix = pprint._cache[ttype][t]
             -- FIXME should really handle `cache_state == nil`
             -- as user might add things through filter_function
-            if cache_state == nil then
-                print(t)
-                error('fucked')
-            end
             if cache_state == false then
                 -- already printed, just print the the number
                 return string_formatter(string.format('%s %d', ttype, tix), true)
