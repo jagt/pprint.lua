@@ -267,6 +267,11 @@ function pprint.pformat(obj, option, printer)
     end
 
     local function table_formatter(t)
+        -- printing _cache would certainly cause error
+        if pprint._cache and pprint._cache == t then
+            return string_formatter('!pprint internal!')
+        end
+
         if option.use_tostring then
             local mt = getmetatable(t)
             if mt and mt.__tostring then
@@ -279,6 +284,8 @@ function pprint.pformat(obj, option, printer)
         if option.object_cache then
             local cache_state = pprint._cache.visited_tables[t]
             local tix = pprint._cache[ttype][t]
+            -- FIXME should really handle `cache_state == nil`
+            -- as user might add things through filter_function
             if cache_state == false then
                 -- already printed, just print the the number
                 return string_formatter(string.format('%s %d', ttype, tix), true)

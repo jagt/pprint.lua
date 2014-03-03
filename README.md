@@ -33,7 +33,7 @@ pprint(_G)
 
 ## Usage
 
-Grab [`pprint.lua`](https://raw.github.com/jagt/pprint.lua/master/pprint.lua) and drop it into your project. Then just require and start printing:
+Grab [`pprint.lua`](https://raw.github.com/jagt/pprint.lua/master/pprint.lua) file and drop it into your project. Then just require and start printing:
 
     local pprint = require('pprint')
     pprint({ foo = 'bar' })
@@ -45,7 +45,7 @@ pprint.lua exposes `pprint` table with two other functions:
 * `pprint(...)` : pretty print arguments. If there's more than one argument then they are put into a table and printed.
 * `pprint.pformat(obj[, option[, printer]])` : return the string representation of `obj`. Provide `option` to override global settings during this invoke. `printer` will be called repeatly with string segments from the output. For example `pprint` uses `io.write` as printer.
 * `pprint.setup(option)` : setup global options, affecting all following calls.
-* `pprint.defaults` : default settings. You can use `pprint(pprint.defaults)` to see what's in it.
+* `pprint.defaults` : default settings. `pprint(pprint.defaults)` to see what's in it.
 
 ## Options
 
@@ -88,7 +88,7 @@ Available options are:
 
 * __indent_size__ : indent size for each nested table. Defaults to `2`.
 * __level_width__ : max width per indent level. Defaults to `80`.
-* __wrap_string__ : break strings longer than __level_width__. Defaults to `true`.
+* __wrap_string__ : wrap strings longer than __level_width__. Defaults to `true`.
     
     ```lua
     pprint.setup({level_width = 12, wrap_string = true})
