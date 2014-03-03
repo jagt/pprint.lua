@@ -66,11 +66,23 @@ local CACHE_TYPES = {
 --     visited_tables = { `table1` = true, `table2` = true },
 -- }
 -- use weakrefs to avoid accidentall adding refcount
-local function cache_apperance(obj, cache)
+local function cache_apperance(obj, cache, option)
+    -- avoid visiting into cache
+    if obj == cache then return end
+
     if not cache.visited_tables then
         cache.visited_tables = setmetatable({}, {__mode = 'k'})
     end
     local t = type(obj)
+
+    -- TODO can't test filter_function here as we don't have the ix and key,
+    -- might cause different results?
+    -- respect show_xxx and filter_function to be consistent with print results
+    if (not TYPES[t] and not option.show_table)
+        or (TYPES[t] and not option['show_'..t]) then
+        return
+    end
+
     if CACHE_TYPES[t] or TYPES[t] == nil then
         if not cache[t] then
             cache[t] = setmetatable({}, {__mode = 'k'})
@@ -93,12 +105,12 @@ local function cache_apperance(obj, cache)
             return
         end
         for k, v in pairs(obj) do
-            cache_apperance(k, cache)
-            cache_apperance(v, cache)
+            cache_apperance(k, cache, option)
+            cache_apperance(v, cache, option)
         end
         local mt = getmetatable(obj)
-        if mt then
-            cache_apperance(mt, cache)
+        if mt and option.show_metatable then
+            cache_apperance(mt, cache, option)
         end
     end
 end
@@ -286,6 +298,10 @@ function pprint.pformat(obj, option, printer)
             local tix = pprint._cache[ttype][t]
             -- FIXME should really handle `cache_state == nil`
             -- as user might add things through filter_function
+            if cache_state == nil then
+                print(t)
+                error('fucked')
+            end
             if cache_state == false then
                 -- already printed, just print the the number
                 return string_formatter(string.format('%s %d', ttype, tix), true)
@@ -405,7 +421,7 @@ function pprint.pformat(obj, option, printer)
 
     if option.object_cache then
         -- needs to visit the table before start printing
-        cache_apperance(obj, pprint._cache)
+        cache_apperance(obj, pprint._cache, option)
     end
 
     _p(format(obj))
