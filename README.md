@@ -30,7 +30,6 @@ pprint(_G)
 --   ...
 ```
 
-
 ## Usage
 
 Grab [`pprint.lua`](https://raw.github.com/jagt/pprint.lua/master/pprint.lua) file and drop it into your project. Then just require and start printing:
@@ -61,7 +60,7 @@ print(pprint.format(pprint.defaults, {sort_keys = false}))
 
 Available options are:
 
-* __show_{type}__ : skip values of given `type` when set to false. This includes the type of value as key, value or array element of a table. Defaults to show only `nil`, `boolean`, `number`, `string`.
+* __show_{type}__ : skip values of given `type` when set to false. This includes the type of value as key, value or array element of a table. Defaults to show only `nil`, `boolean`, `number`, `string`. In some projects `type()` might returns non standard types. pprint.lua treats all these things as `table`, which in most cases should be correct.
 * __show_metatable__ : whether showing metatable. Defaults to `false`.
 * __show_all__ : show everything when set to `true`. It overrides all other `show` options. Defaults to `false`.
 * __use_tostring__ : show table by using `__tostring` when available. Defaults to `true`.
@@ -103,7 +102,10 @@ Available options are:
 
 ## Bugs
 
-0. There're no tests yet. (will be added soon.)
+Currently pprint.lua should be usable, meaning there's no obvious issues. If you've found something is wrong please do open an issue.
+
+1. There aren't enough tests yet.
+1. Still have some formatting issues.
 1. Combination of some settings might cause visual artifacts in the output.
 
 ## License
