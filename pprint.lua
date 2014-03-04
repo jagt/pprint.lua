@@ -242,6 +242,10 @@ function pprint.pformat(obj, option, printer)
         return tostring(v)
     end
 
+    local function number_formatter(n)
+        return n == math.huge and '[[math.huge]]' or tostring(n)
+    end
+
     local function nop_formatter(v)
         return ''
     end
@@ -407,14 +411,12 @@ function pprint.pformat(obj, option, printer)
     end
 
     -- set formatters
-    for _, t in ipairs({'nil', 'boolean', 'number'}) do
-        formatter[t] = option['show_'..t] and tostring_formatter or nop_formatter
-    end
-
-    for _, t in ipairs({'function', 'thread', 'userdata'}) do
-        formatter[t] = option['show_'..t] and make_fixed_formatter(t, option.object_cache) or nop_formatter
-    end
-
+    formatter['nil'] = option.show_nil and tostring_formatter or nop_formatter
+    formatter['boolean'] = option.show_boolean and tostring_formatter or nop_formatter
+    formatter['number'] = option.show_number and number_formatter or nop_formatter -- need to handle math.huge
+    formatter['function'] = option.show_function and make_fixed_formatter('function', option.object_cache) or nop_formatter
+    formatter['thread'] = option.show_thread and make_fixed_formatter('thread', option.object_cache) or nop_formatter
+    formatter['userdata'] = option.show_userdata and make_fixed_formatter('userdata', option.object_cache) or nop_formatter
     formatter['string'] = option.show_string and string_formatter or nop_formatter
     formatter['table'] = option.show_table and table_formatter or nop_formatter
 
