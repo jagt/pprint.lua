@@ -17,4 +17,4 @@ script:
     # list to be sure
     - find /usr/bin -name 'luajit*'
     # luajit isn't always linked on lower versions
-    - `find /usr/bin -name 'luajit*' | head -n 1` runner.lua
+    - "`find /usr/bin -name 'luajit*' | head -n 1` runner.lua"
