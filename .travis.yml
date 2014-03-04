@@ -1,0 +1,10 @@
+language: lua
+
+install:
+    - sudo apt-get install lua5.1 lua5.2 luajit
+
+script:
+    - cd tests
+    - lua5.1 runner.lua
+    - lua5.2 runner.lua
+    - luajit runner.lua
