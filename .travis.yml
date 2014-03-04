@@ -1,7 +1,14 @@
 language: lua
 
+cache: apt
+
+before_install:
+    - sudo apt-get update
+
 install:
-    - sudo apt-get install lua5.1 lua5.2 luajit
+    - sudo apt-get install lua5.1
+    - sudo apt-get install lua5.2
+    - sudo apt-get install luajit
 
 script:
     - cd tests
