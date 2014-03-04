@@ -2,6 +2,8 @@
 
 __easy lua pretty printing, customizable and public domain!__
 
+[![Build Status](https://travis-ci.org/jagt/pprint.lua.png?branch=master)](https://travis-ci.org/jagt/pprint.lua)
+
 pprint.lua is a friendly reimplementation of [inspect.lua][1]. `pprint(whatever)` in which `whatever` is anything you can find in Lua. It would dump it into a meaningful representation. Notablely features:
 
 * Limited customization through setting options.
