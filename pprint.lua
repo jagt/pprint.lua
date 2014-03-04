@@ -61,9 +61,9 @@ local CACHE_TYPES = {
 
 -- cache would be populated to be like:
 -- {
---     function = { `fun1` = 1, _cnt = 1 },
+--     function = { `fun1` = 1, _cnt = 1 }, -- object id
 --     table = { `table1` = 1, `table2` = 2, _cnt = 2 },
---     visited_tables = { `table1` = true, `table2` = true },
+--     visited_tables = { `table1` = 7, `table2` = 8  }, -- visit count
 -- }
 -- use weakrefs to avoid accidentall adding refcount
 local function cache_apperance(obj, cache, option)
@@ -262,16 +262,19 @@ function pprint.pformat(obj, option, printer)
         local s, quote = escape(s)
         local quote_len = force_long_quote and 4 or 2
         if quote_len + #s + status.len > option.level_width then
+            _n()
             -- only wrap string when is longer than level_width
             if option.wrap_string and #s + quote_len > option.level_width then
-                s = '[['..s..']]'
+                -- keep the quotes together
+                _p('[[')
                 while #s + status.len >= option.level_width do
                     local seg = option.level_width - status.len
                     _p(string.sub(s, 1, seg), true)
                     _n()
                     s = string.sub(s, seg+1)
                 end
-                return s -- return remaining part
+                _p(s) -- print the remaining parts
+                return ']]' 
             end
         end
 

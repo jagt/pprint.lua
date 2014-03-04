@@ -60,7 +60,7 @@ print(pprint.format(pprint.defaults, {sort_keys = false}))
 
 Available options are:
 
-* __show_{type}__ : skip values of given `type` when set to false. This includes the type of value as key, value or array element of a table. Defaults to show only `nil`, `boolean`, `number`, `string`. In some projects `type()` might returns non standard types. pprint.lua treats all these things as `table`, which in most cases should be correct.
+* __show_{type}__ : skip values of given `type` when set to false. This includes the type of value as key, value or array element of a table. Defaults to show only `nil`, `boolean`, `number`, `string`. In some projects `type()` might returns non standard types. pprint.lua treats all these as `table`, which in most cases should be reasonable.
 * __show_metatable__ : whether showing metatable. Defaults to `false`.
 * __show_all__ : show everything when set to `true`. It overrides all other `show` options. Defaults to `false`.
 * __use_tostring__ : show table by using `__tostring` when available. Defaults to `true`.
