@@ -15,7 +15,7 @@ pprint.defaults = {
     show_metatable = false,     -- show metatable
     show_all = false,           -- override other show settings and show everything
     use_tostring = false,       -- use __tostring to print table if available
-    filter_function = nil,      -- called like callback(value[,key]), return truty value to hide
+    filter_function = nil,      -- called like callback(value[,key, parent]), return truty value to hide
     object_cache = 'local',     -- cache blob and table to give it a id, 'local' cache per print, 'global' cache
                                 -- per process, falsy value to disable (might cause infinite loop)
     -- format settings
@@ -233,7 +233,7 @@ function pprint.pformat(obj, option, printer)
     local function format(v)
         local f = formatter[type(v)]
         f = f or formatter.table -- allow patched type()
-        if option.filter_function and option.filter_function(v, nil) then
+        if option.filter_function and option.filter_function(v, nil, nil) then
             return ''
         else
             return f(v)
@@ -325,7 +325,7 @@ function pprint.pformat(obj, option, printer)
         for ix = 1,tlen do
             local v = t[ix]
             if formatter[type(v)] == nop_formatter or 
-               (option.filter_function and option.filter_function(v, ix)) then
+               (option.filter_function and option.filter_function(v, ix, t)) then
                -- pass
             else
                 if option.wrap_array then
@@ -335,6 +335,7 @@ function pprint.pformat(obj, option, printer)
             end
         end
 
+        -- hashmap part of the table, in contrast to array part
         local function is_hash_key(k)
             local numkey = tonumber(k)
             if numkey ~= k or numkey > tlen then
@@ -342,11 +343,11 @@ function pprint.pformat(obj, option, printer)
             end
         end
 
-        local function print_kv(k, v)
+        local function print_kv(k, v, t)
             -- can't use option.show_x as obj may contain custom type
             if formatter[type(v)] == nop_formatter or
                formatter[type(k)] == nop_formatter or 
-               (option.filter_function and option.filter_function(v, k)) then
+               (option.filter_function and option.filter_function(v, k, t)) then
                 return
             end
             wrapped = _n()
@@ -377,12 +378,12 @@ function pprint.pformat(obj, option, printer)
             end
             table.sort(keys, cmp)
             for _, k in ipairs(keys) do
-                print_kv(k, t[k])
+                print_kv(k, t[k], t)
             end
         else
             for k, v in pairs(t) do
                 if is_hash_key(k) then
-                    print_kv(k, v)
+                    print_kv(k, v, t)
                 end
             end
         end
@@ -390,7 +391,7 @@ function pprint.pformat(obj, option, printer)
         if option.show_metatable then
             local mt = getmetatable(t)
             if mt then
-                print_kv('__metatable', mt)
+                print_kv('__metatable', mt, t)
             end
         end
 

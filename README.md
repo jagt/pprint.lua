@@ -1,14 +1,14 @@
 # pprint.lua
 
-__easy lua pretty printing, customizable and public domain!__
+__easy Lua pretty printing, customizable and public domain!__
 
 [![Build Status](https://travis-ci.org/jagt/pprint.lua.png?branch=master)](https://travis-ci.org/jagt/pprint.lua)
 
-pprint.lua is a friendly reimplementation of [inspect.lua][1]. `pprint(whatever)` in which `whatever` is anything you can find in Lua. It would dump it into a meaningful representation. Notablely features:
+pprint.lua is a friendly reimplementation of [inspect.lua][1]. `pprint(whatever)` in which `whatever` is anything you can find in Lua. It would dump it into a meaningful representation. Notably features:
 
 * Limited customization through setting options.
-* Sensable defaults, like _not_ printing functions, userdatas, wrapping long lines etc.
-* Printed results can be evaled (can't guarenteed to be identical as the original value).
+* Sensible defaults, like _not_ printing functions, userdatas, wrapping long lines etc.
+* Printed results can be evaled (can't guaranteed to be identical as the original value).
 * Released into the Public Domain, for whatever reason.
 
 Example:
@@ -45,13 +45,13 @@ If you're on LuaRocks then just get [`inspect.lua`][1] instead. It's been around
 pprint.lua exposes `pprint` table with two other functions:
 
 * `pprint(...)` : pretty print arguments. If there's more than one argument then they are put into a table and printed.
-* `pprint.pformat(obj[, option[, printer]])` : return the string representation of `obj`. Provide `option` to override global settings during this invoke. `printer` will be called repeatly with string segments from the output. For example `pprint` uses `io.write` as printer.
+* `pprint.pformat(obj[, option[, printer]])` : return the string representation of `obj`. Provide `option` to override global settings during this invoke. `printer` will be called repeatedly with string segments from the output. For example `pprint` uses `io.write` as printer.
 * `pprint.setup(option)` : setup global options, affecting all following calls.
 * `pprint.defaults` : default settings. `pprint(pprint.defaults)` to see what's in it.
 
 ## Options
 
-You can configurate `pprint` behaviors by using `pprint.setup` or pass a table into `pformat`:
+You can configure `pprint` behaviors by using `pprint.setup` or pass a table into `pformat`:
 
 ```lua
 pprint.setup {
@@ -67,7 +67,7 @@ Available options are:
 * __show_metatable__ : whether showing metatable. Defaults to `false`.
 * __show_all__ : show everything when set to `true`. It overrides all other `show` options. Defaults to `false`.
 * __use_tostring__ : show table by using `__tostring` when available. Defaults to `true`.
-* __filter_function__ : provide a function and it would be called as `func(v, k)`. `v` is the value. `k` is key or index, which isn't always available. Return truty values to skip showing this value. Here's an example for hiding empty tables:
+* __filter_function__ : provide a function and it would be called as `func(v, [k, t])`. `v` is the value. `k` is key or index while `t` is the parent, which isn't always available. Return truthy values to skip showing this value. Here's an example for hiding empty tables:
 
     ```lua
     pprint.setup{filter_function = function(v, k)
