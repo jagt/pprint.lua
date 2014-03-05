@@ -8,6 +8,7 @@ pprint.lua is a friendly reimplementation of [inspect.lua][1]. `pprint(whatever)
 
 * Limited customization through setting options.
 * Sensable defaults, like _not_ printing functions, userdatas, wrapping long lines etc.
+* Printed results can be evaled (can't guarenteed to be identical as the original value).
 * Released into the Public Domain, for whatever reason.
 
 Example:
@@ -34,7 +35,7 @@ pprint(_G)
 
 ## Usage
 
-Grab [`pprint.lua`](https://raw.github.com/jagt/pprint.lua/master/pprint.lua) file and drop it into your project. Then just require and start printing:
+Grab [`pprint.lua`](https://raw.github.com/jagt/pprint.lua/master/pprint.lua) and drop it into your project. Then just require and start printing:
 
     local pprint = require('pprint')
     pprint({ foo = 'bar' })

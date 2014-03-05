@@ -31,7 +31,7 @@ local TYPES = {
     ['table'] = 5, ['function'] = 6, ['thread'] = 7, ['userdata'] = 8
 }
 
--- seems this is the only way to escape these, as lua don't know how to char '\a' to 'a'
+-- seems this is the only way to escape these, as lua don't know how to map char '\a' to 'a'
 local ESCAPE_MAP = {
     ['\a'] = '\\a', ['\b'] = '\\b', ['\f'] = '\\f', ['\n'] = '\\n', ['\r'] = '\\r',
     ['\t'] = '\\t', ['\v'] = '\\v', ['\\'] = '\\\\',
@@ -67,9 +67,6 @@ local CACHE_TYPES = {
 -- }
 -- use weakrefs to avoid accidentall adding refcount
 local function cache_apperance(obj, cache, option)
-    -- avoid visiting into cache
-    if obj == cache then return end
-
     if not cache.visited_tables then
         cache.visited_tables = setmetatable({}, {__mode = 'k'})
     end
@@ -169,11 +166,6 @@ local function make_option(option)
             option.show_metatable = true
         end
     end
-    if option.object_cache == 'global' then
-        pprint._cache = pprint._cache or {}
-    elseif option.object_cache == 'local' then
-        pprint._cache = {}
-    end
     return option
 end
 
@@ -190,6 +182,16 @@ function pprint.pformat(obj, option, printer)
         table.insert(buf, s)
     end
     printer = printer or default_printer
+
+    local cache
+    if option.object_cache == 'global' then
+        -- steal the cache into a local var so it's not visible from _G or anywhere
+        -- still can't avoid user explicitly referentce pprint._cache but it shouldn't happen anyway
+        cache = pprint._cache or {}
+        pprint._cache = nil
+    elseif option.object_cache == 'local' then
+        cache = {}
+    end
 
     local last = '' -- used for look back and remove trailing comma
     local status = {
@@ -253,7 +255,7 @@ function pprint.pformat(obj, option, printer)
     local function make_fixed_formatter(t, has_cache)
         if has_cache then
             return function (v)
-                return string.format('[[%s %d]]', t, pprint._cache[t][v])
+                return string.format('[[%s %d]]', t, cache[t][v])
             end
         else
             return function (v)
@@ -286,11 +288,6 @@ function pprint.pformat(obj, option, printer)
     end
 
     local function table_formatter(t)
-        -- printing _cache would certainly cause error
-        if pprint._cache and pprint._cache == t then
-            return string_formatter('!pprint internal!')
-        end
-
         if option.use_tostring then
             local mt = getmetatable(t)
             if mt and mt.__tostring then
@@ -301,8 +298,8 @@ function pprint.pformat(obj, option, printer)
         local print_header_ix = nil
         local ttype = type(t)
         if option.object_cache then
-            local cache_state = pprint._cache.visited_tables[t]
-            local tix = pprint._cache[ttype][t]
+            local cache_state = cache.visited_tables[t]
+            local tix = cache[ttype][t]
             -- FIXME should really handle `cache_state == nil`
             -- as user might add things through filter_function
             if cache_state == false then
@@ -311,7 +308,7 @@ function pprint.pformat(obj, option, printer)
             elseif cache_state > 1 then
                 -- appeared more than once, print table header with number
                 print_header_ix = tix
-                pprint._cache.visited_tables[t] = false
+                cache.visited_tables[t] = false
             else
                 -- appeared exactly once, print like a normal table
             end
@@ -422,11 +419,16 @@ function pprint.pformat(obj, option, printer)
 
     if option.object_cache then
         -- needs to visit the table before start printing
-        cache_apperance(obj, pprint._cache, option)
+        cache_apperance(obj, cache, option)
     end
 
     _p(format(obj))
     printer(last) -- close the buffered one
+
+    -- put cache back if global
+    if option.object_cache == 'global' then
+        pprint._cache = cache
+    end
 
     return table.concat(buf)
 end

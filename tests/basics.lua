@@ -85,6 +85,10 @@ pprint.pformat(t),
 )
 end)
 
+
+test('nested table', function()
+end)
+
 -- _G should be complex enough
 test('eval pformat _G', function()
 local s = loadstring('return '..pprint.pformat(s, {show_all = true}))()
