@@ -1,4 +1,4 @@
-local pprint = { VERSION = '0.0' }
+local pprint = { VERSION = '0.1' }
 
 pprint.defaults = {
     -- type display trigger, hide not useful datatypes by default

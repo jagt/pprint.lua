@@ -1,6 +1,6 @@
 # pprint.lua
 
-__easy Lua pretty printing, customizable and public domain!__
+__easy lua pretty printing, customizable and public domain!__
 
 [![Build Status](https://travis-ci.org/jagt/pprint.lua.png?branch=master)](https://travis-ci.org/jagt/pprint.lua)
 
@@ -9,6 +9,7 @@ pprint.lua is a friendly reimplementation of [inspect.lua][1]. `pprint(whatever)
 * Limited customization through setting options.
 * Sensible defaults, like _not_ printing functions, userdatas, wrapping long lines etc.
 * Printed results can be evaled (can't guaranteed to be identical as the original value).
+* Tested Lua 5.1, 5.2, Luajit 2.0.2
 * Released into the Public Domain, for whatever reason.
 
 Example:
