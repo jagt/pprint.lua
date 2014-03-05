@@ -48,6 +48,7 @@ _G.test = test
 _G.assert_str_equal = assert_str_equal
 
 dofile('./basics.lua')
+dofile('./options.lua')
 dofile('./regression.lua')
 
 io.write(string.format('executed %d cases. passed: %s\n', case - 1, tostring(pass)))

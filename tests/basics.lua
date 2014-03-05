@@ -1,4 +1,7 @@
-local simple = {
+print '-- basics'
+
+-- reused in following tests
+_G.simple = {
     ['nil'] = nil,
     ['boolean'] = true,
     ['number'] = 253,
@@ -86,7 +89,17 @@ pprint.pformat(t),
 end)
 
 
-test('nested table', function()
+test('simple nested table', function()
+local empty = {}
+local t = {a=empty, b=empty, c=empty}
+assert_str_equal(pprint.pformat(t),
+[===[
+{
+  a = { --[[table 2]] },
+  b = [[table 2]],
+  c = [[table 2]]
+}
+]===])
 end)
 
 -- _G should be complex enough
