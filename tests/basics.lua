@@ -106,3 +106,14 @@ end)
 test('eval pformat _G', function()
 local s = loadstring('return '..pprint.pformat(s, {show_all = true}))()
 end)
+
+
+test('identify hash key', function()
+local t = {1, 2, 3, [5] = 5}
+assert_str_equal(pprint.pformat(t),
+[===[
+{ 1, 2, 3,
+  [5] = 5
+}
+]===])
+end)

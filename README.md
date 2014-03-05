@@ -76,7 +76,7 @@ Available options are:
     end}
     ```
 
-* __object_cache__ : table might contain cyclic references and simply print all values would cause an infinite loop. __object_cache__ defaults to `local` so pprint would refer previously seen table with a short name. Set to `global` will cause the cache be kept between pprint invokes. Set to `nil` to disable, which might cause infinite loop.
+* __object_cache__ : table might contain cyclic references and simply print all values would cause an infinite loop. __object_cache__ defaults to `local` so pprint would refer previously seen table with a short name. Set to `global` will cause the cache be kept between pprint invokes. Set to `false` to disable, which might cause infinite loop.
 
     ```lua
     empty = {}
@@ -101,7 +101,7 @@ Available options are:
     -- ords.]]
     ```
 
-* __wrap_array__ : whether newline on array elements. Defaults to `false`.
+* __wrap_array__ : whether print each each array element on newline. Defaults to `false`.
 * __sort_keys__ : natural-sort table keys for easier reading. Defaults to `true`.
 
 ## Bugs
