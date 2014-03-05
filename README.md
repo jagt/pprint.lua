@@ -9,7 +9,7 @@ pprint.lua is a friendly reimplementation of [inspect.lua][1]. `pprint(whatever)
 * Limited customization through setting options.
 * Sensible defaults, like _not_ printing functions, userdatas, wrapping long lines etc.
 * Printed results can be evaled (can't guaranteed to be identical as the original value).
-* Tested Lua 5.1, 5.2, Luajit 2.0.2
+* Tested Lua 5.1, 5.2, Luajit 2.0.2.
 * Released into the Public Domain, for whatever reason.
 
 Example:
@@ -65,9 +65,9 @@ print(pprint.format(pprint.defaults, {sort_keys = false}))
 Available options are:
 
 * __show_{type}__ : skip values of given `type` when set to false. This includes the type of value as key, value or array element of a table. Defaults to show only `nil`, `boolean`, `number`, `string`. In some projects `type()` might returns non standard types. pprint.lua treats all these as `table`, which in most cases should be reasonable.
-* __show_metatable__ : whether showing metatable. Defaults to `false`.
+* __show_metatable__ : whether show metatable. Defaults to `false`.
 * __show_all__ : show everything when set to `true`. It overrides all other `show` options. Defaults to `false`.
-* __use_tostring__ : show table by using `__tostring` when available. Defaults to `true`.
+* __use_tostring__ : show table by using `__tostring` when available. Defaults to `false`.
 * __filter_function__ : provide a function and it would be called as `func(v, [k, t])`. `v` is the value. `k` is key or index while `t` is the parent, which isn't always available. Return truthy values to skip showing this value. Here's an example for hiding empty tables:
 
     ```lua
@@ -109,7 +109,6 @@ Available options are:
 Currently pprint.lua should be usable, meaning there's no obvious issues. If you've found something is wrong please do open an issue.
 
 1. There aren't enough tests yet.
-1. Still have some formatting issues.
 1. Combination of some settings might cause visual artifacts in the output.
 1. eval `pformat` results might not always work, as string escaping isn't perfect atm.
 
