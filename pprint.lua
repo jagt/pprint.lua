@@ -115,8 +115,8 @@ end
 -- makes 'foo2' < 'foo100000'. string.sub makes substring anyway, no need to use index based method
 local function str_natural_cmp(lhs, rhs)
     while #lhs > 0 and #rhs > 0 do
-        local lmid, lend = lhs:find('[%d.]+')
-        local rmid, rend = rhs:find('[%d.]+')
+        local lmid, lend = lhs:find('%d+')
+        local rmid, rend = rhs:find('%d+')
         if not (lmid and rmid) then return lhs < rhs end
 
         local lsub = lhs:sub(1, lmid-1)
@@ -124,7 +124,7 @@ local function str_natural_cmp(lhs, rhs)
         if lsub ~= rsub then
             return lsub < rsub
         end
-
+        
         local lnum = tonumber(lhs:sub(lmid, lend))
         local rnum = tonumber(rhs:sub(rmid, rend))
         if lnum ~= rnum then

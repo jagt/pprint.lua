@@ -112,6 +112,11 @@ Currently pprint.lua should be usable, meaning there's no obvious issues. If you
 1. Combination of some settings might cause visual artifacts in the output.
 1. eval `pformat` results might not always work, as string escaping isn't perfect atm.
 
+## TODOs
+
+* verbose name tag printing, `ie --[[table io]]`
+* show_custom type, `option.show_foo = function(v) ... end`
+
 ## License
 
 Public Domain
