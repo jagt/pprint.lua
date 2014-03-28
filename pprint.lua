@@ -437,12 +437,12 @@ end
 -- pprint all the arguments
 function pprint.pprint( ... )
     local args = {...}
-    if #args == 1 then
-        pprint.pformat(args[1], nil, io.write)
-    else
-        pprint.pformat(args, nil, io.write)
+    -- select will get an accurate count of array len, counting trailing nils
+    local len = select('#', ...)
+    for ix = 1,len do
+        pprint.pformat(args[ix], nil, io.write)
+        io.write('\n')
     end
-    print()
 end
 
 setmetatable(pprint, {

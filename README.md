@@ -45,7 +45,7 @@ If you're on LuaRocks then just get [`inspect.lua`][1] instead. It's been around
 
 pprint.lua exposes `pprint` table with two other functions:
 
-* `pprint(...)` : pretty print arguments. If there's more than one argument then they are put into a table and printed.
+* `pprint(...)` : pretty print arguments, each argument starting on a new line.
 * `pprint.pformat(obj[, option[, printer]])` : return the string representation of `obj`. Provide `option` to override global settings during this invoke. `printer` will be called repeatedly with string segments from the output. For example `pprint` uses `io.write` as printer.
 * `pprint.setup(option)` : setup global options, affecting all following calls.
 * `pprint.defaults` : default settings. `pprint(pprint.defaults)` to see what's in it.
