@@ -46,6 +46,9 @@ _G.pprint = pprint
 _G.type = newtype
 _G.test = test
 _G.assert_str_equal = assert_str_equal
+if not _G.loadstring then
+    _G.loadstring = load
+end
 
 dofile('./basics.lua')
 dofile('./options.lua')
