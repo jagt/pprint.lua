@@ -1,6 +1,10 @@
 local pprint = { VERSION = '0.1' }
 
+local depth = 1
+
 pprint.defaults = {
+    -- If set to number N, then limit table recursion to N deep.
+    depth_limit = false,
     -- type display trigger, hide not useful datatypes by default
     -- custom types are treated as table
     show_nil = true,
@@ -314,6 +318,14 @@ function pprint.pformat(obj, option, printer)
             end
         end
 
+        local limit = tonumber(option.depth_limit)
+        if limit and depth > limit then
+           if print_header_ix then
+              return string.format('[[%s %d]]...', ttype, print_header_ix)
+           end
+           return string_formatter(tostring(t), true)
+        end
+
         local tlen = #t
         local wrapped = false
         _p('{')
@@ -331,7 +343,9 @@ function pprint.pformat(obj, option, printer)
                 if option.wrap_array then
                     wrapped = _n()
                 end
+                depth = depth+1
                 _p(format(v)..', ')
+                depth = depth-1
             end
         end
 
@@ -365,7 +379,9 @@ function pprint.pformat(obj, option, printer)
                 _p(']')
             end
             _p(' = ', true)
+            depth = depth+1
             _p(format(v), true)
+            depth = depth-1
             _p(',', true)
         end
 
