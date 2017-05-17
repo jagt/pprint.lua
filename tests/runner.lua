@@ -42,6 +42,13 @@ function assert_str_equal(lhs, rhs)
     end
 end
 
+function assert_str_match(str,pat)
+   str=normalize(str)
+   if not string.match(str,pat) then
+      error(string.format('pattern match failed!\ntrimmed string:\n>>>\n%s\n<<<\npattern:\n>>>\n%s\n<<<\n', str, pat), 2)
+   end
+end
+
 _G.pprint = pprint
 _G.type = newtype
 _G.test = test
