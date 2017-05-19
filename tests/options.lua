@@ -10,6 +10,7 @@ assert_str_equal(pprint.pformat(simple, {
     show_function = false,
     show_thread = false,
     show_userdata = false,
+    depth_limit = false
 }),
 [[
 {}
@@ -235,6 +236,39 @@ assert_str_equal(pprint.pformat(t, {
 }
 ]]
 )
+end)
+
+test('depth_limit', function ()
+local a = { 1, 2, 3, 4, 5 }
+local t = { a, { a }}
+
+assert_str_equal(pprint.pformat(t, { depth_limit=2 }),
+[==[ { { --[[table 2]] 1, 2, 3, 4, 5 }, { [[table 2]] } } ]==])
+
+assert_str_match(pprint.pformat(t, { depth_limit=1 }),
+[==[{%-%[%[table%-2%]%]%.%.%.,%-%[%[table:%-0x[0-9a-f]+%]%]%-}]==])
+
+assert_str_match(pprint.pformat(t, { depth_limit=0 }),
+[==[%[%[table:%-0x[0-9a-f]+%]%]]==])
+
+a = { book1 = 'book1', book10 = 'book10', book2 = 'book2' }
+t = { a, { a }}
+
+assert_str_equal(pprint.pformat(t, { depth_limit=2 }),
+[==[
+{ { --[[table 2]]
+    book1 = 'book1',
+    book2 = 'book2',
+    book10 = 'book10'
+  }, { [[table 2]] } }
+]==])
+
+assert_str_match(pprint.pformat(t, { depth_limit=1 }),
+[==[{%-%[%[table%-2%]%]%.%.%.,%-%[%[table:%-0x[0-9a-f]+%]%]%-}]==])
+
+assert_str_match(pprint.pformat(t, { depth_limit=0 }),
+[==[%[%[table:%-0x[0-9a-f]+%]%]]==])
+
 end)
 
 -- it's actually quite difficult to test unsorted, as we must ensure it's as
