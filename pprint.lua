@@ -351,8 +351,12 @@ function pprint.pformat(obj, option, printer)
 
         -- hashmap part of the table, in contrast to array part
         local function is_hash_key(k)
-            local numkey = tonumber(k)
-            if numkey ~= k or numkey > tlen then
+            if type(k) ~= 'number' then
+                return true
+            end
+
+            local numkey = math.floor(tonumber(k))
+            if numkey ~= k or numkey > tlen or numkey <= 0 then
                 return true
             end
         end
