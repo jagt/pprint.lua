@@ -246,10 +246,10 @@ assert_str_equal(pprint.pformat(t, { depth_limit=2 }),
 [==[ { { --[[table 2]] 1, 2, 3, 4, 5 }, { [[table 2]] } } ]==])
 
 assert_str_match(pprint.pformat(t, { depth_limit=1 }),
-[==[{%-%[%[table%-2%]%]%.%.%.,%-%[%[table:%-0x[0-9a-f]+%]%]%-}]==])
+[==[{%-%[%[table%-2%]%]%.%.%.,%-%[%[table:%-%w+%]%]%-}]==])
 
 assert_str_match(pprint.pformat(t, { depth_limit=0 }),
-[==[%[%[table:%-0x[0-9a-f]+%]%]]==])
+[==[%[%[table:%-%w+%]%]]==])
 
 a = { book1 = 'book1', book10 = 'book10', book2 = 'book2' }
 t = { a, { a }}
@@ -264,10 +264,10 @@ assert_str_equal(pprint.pformat(t, { depth_limit=2 }),
 ]==])
 
 assert_str_match(pprint.pformat(t, { depth_limit=1 }),
-[==[{%-%[%[table%-2%]%]%.%.%.,%-%[%[table:%-0x[0-9a-f]+%]%]%-}]==])
+[==[{%-%[%[table%-2%]%]%.%.%.,%-%[%[table:%-%w+%]%]%-}]==])
 
 assert_str_match(pprint.pformat(t, { depth_limit=0 }),
-[==[%[%[table:%-0x[0-9a-f]+%]%]]==])
+[==[%[%[table:%-%w+%]%]]==])
 
 end)
 
