@@ -18,4 +18,4 @@ jobs:
 
       - name: test lua
         run: lua runner.lua
-          working-directory: ./tests
+        working-directory: ./tests
