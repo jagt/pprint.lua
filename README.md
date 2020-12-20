@@ -9,7 +9,7 @@ pprint.lua is a friendly reimplementation of [inspect.lua][1]. `pprint(whatever)
 * Limited customization through setting options.
 * Sensible defaults, like _not_ printing functions, userdatas, wrapping long lines etc.
 * Printed results can be evaled (can't guaranteed to be identical as the original value).
-* Tested on Lua 5.1, 5.2, 5.3 and Luajit 2.0.2.
+* Tested on Lua 5.1, 5.2, 5.3, 5.4 and Luajit 2.0.2.
 * Released into the Public Domain, for whatever reason.
 
 Example:
