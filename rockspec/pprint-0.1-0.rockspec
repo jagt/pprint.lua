@@ -1,3 +1,4 @@
+rockspec_format = "3.0"
 package = "pprint"
 version = "0.1-0"
 description = {
@@ -33,9 +34,9 @@ pprint(_G)
 --   ... 
 ```
 ]=],
-  license = "Public Domain"
+  license = "Public Domain",
   homepage = "https://github.com/kikito/inspect.lua",
-  issues_url = "https://github.com/jagt/pprint.lua/issues"
+  issues_url = "https://github.com/jagt/pprint.lua/issues",
   labels = {"debug"}
 }
 dependencies = {
